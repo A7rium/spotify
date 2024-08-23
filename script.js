@@ -33,9 +33,12 @@ if (!_token) {
         '%20'
     )}&response_type=token&show_dialog=true`;
     const authWindow = window.open(authUrl, 'Spotify Authentication', 'width=600,height=800');
-    authWindow.onbeforeunload = () => {
-        window.location.reload(); // Refresh the parent window after authentication
-    };
+    const authInterval = setInterval(() => {
+        if (authWindow.closed) {
+            clearInterval(authInterval);
+            window.location.reload(); // Reload the player page once the authentication window is closed
+        }
+    }, 1000);
 } else {
     initSpotifyPlayer(_token);
 }
@@ -140,3 +143,27 @@ function playDefaultPlaylist(device_id, token) {
     })
     .catch(error => console.error('Error playing default playlist:', error));
 }
+
+// AJAX functionality to keep the player playing across page navigations
+$(document).ready(function() {
+    $("a").on("click", function(e) {
+        e.preventDefault();
+        var url = $(this).attr("href");
+        $.ajax({
+            url: url,
+            success: function(data) {
+                $("#content").html($(data).find("#content").html());
+                history.pushState(null, null, url);
+            }
+        });
+    });
+
+    window.onpopstate = function() {
+        $.ajax({
+            url: location.pathname,
+            success: function(data) {
+                $("#content").html($(data).find("#content").html());
+            }
+        });
+    };
+});
