@@ -43,7 +43,7 @@ if (!_token) {
 function initSpotifyPlayer(token) {
     window.onSpotifyWebPlaybackSDKReady = () => {
         const player = new Spotify.Player({
-            name: 'Web Playback SDK Player',
+            name: 'Spotify Player by RT8MG',
             getOAuthToken: cb => { cb(token); },
             volume: 0.5
         });
@@ -60,7 +60,7 @@ function initSpotifyPlayer(token) {
                 const trackName = state.track_window.current_track.name;
                 const albumArt = state.track_window.current_track.album.images[0]?.url;
 
-                document.getElementById('track-title').textContent = trackName || "Spotify Player & RT8MG";
+                document.getElementById('track-title').textContent = trackName || "Spotify Player by RT8MG";
                 if (albumArt) {
                     document.getElementById('album-art').src = albumArt;
                 } else {
@@ -122,21 +122,6 @@ function initSpotifyPlayer(token) {
         });
     };
 }
-
-// Theme toggles
-document.getElementById('toggle-mode').addEventListener('click', () => {
-    document.body.classList.toggle('light-mode');
-    const modeText = document.body.classList.contains('light-mode') ? 'Dark Mode' : 'Light Mode';
-    document.getElementById('toggle-mode').textContent = modeText;
-});
-
-let themeIndex = 0;
-const themes = ['theme-default', 'theme-blue', 'theme-green'];
-document.getElementById('toggle-theme').addEventListener('click', () => {
-    document.body.classList.remove(themes[themeIndex]);
-    themeIndex = (themeIndex + 1) % themes.length;
-    document.body.classList.add(themes[themeIndex]);
-});
 
 function playDefaultPlaylist(device_id, token) {
     const playlistUri = 'spotify:playlist:7uMdU7HvGCIy7IBEk8ZX4U'; // Your fallback playlist URI
