@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Web Playback SDK</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        #player {
+            margin-top: 20px;
+            width: 300px;
+            padding: 20px;
+            background-color: #1db954;
+            border-radius: 10px;
+            text-align: center;
+        }
+        button {
+            background-color: white;
+            border: none;
+            color: #1db954;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        #track-title {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Spotify Web Playback SDK</h1>
+    <div id="player">
+        <h2 id="track-title">Track Title</h2>
+        <button id="prev">Previous</button>
+        <button id="play-pause">Play</button>
+        <button id="next">Next</button>
+    </div>
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
