@@ -7,7 +7,8 @@ const scopes = [
     'user-modify-playback-state',
     'user-read-playback-state',
     'playlist-read-private',
-    'playlist-read-collaborative'
+    'playlist-modify-public',
+    'playlist-modify-private'
 ];
 
 const authEndpoint = 'https://accounts.spotify.com/authorize';
@@ -28,9 +29,13 @@ window.location.hash = '';
 let _token = hash.access_token;
 
 if (!_token) {
-    window.location = `${authEndpoint}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes.join(
+    const authUrl = `${authEndpoint}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes.join(
         '%20'
     )}&response_type=token&show_dialog=true`;
+    const authWindow = window.open(authUrl, 'Spotify Authentication', 'width=600,height=800');
+    authWindow.onbeforeunload = () => {
+        window.location.reload(); // Refresh the parent window after authentication
+    };
 } else {
     initSpotifyPlayer(_token);
 }
@@ -71,6 +76,21 @@ function initSpotifyPlayer(token) {
         player.addListener('ready', ({ device_id }) => {
             console.log('Ready with Device ID', device_id);
             playDefaultPlaylist(device_id, token);
+
+            // Handle track seeking
+            player.getCurrentState().then(state => {
+                if (state) {
+                    const duration = state.duration / 1000; // Convert to seconds
+                    document.getElementById('seek').max = duration;
+                }
+            });
+
+            document.getElementById('seek').addEventListener('input', function() {
+                const seekPosition = this.value * 1000; // Convert to milliseconds
+                player.seek(seekPosition).then(() => {
+                    console.log(`Track seeked to position ${seekPosition}`);
+                });
+            });
         });
 
         // Not Ready
@@ -102,11 +122,29 @@ function initSpotifyPlayer(token) {
             });
         });
 
-        // Track seek control
-        document.getElementById('seek').addEventListener('input', function() {
-            const seekPosition = this.value;
-            player.seek(seekPosition).then(() => {
-                console.log(`Track seeked to position ${seekPosition}`);
+        // Save to playlist
+        document.getElementById('save-to-playlist').addEventListener('click', () => {
+            player.getCurrentState().then(state => {
+                if (state) {
+                    const currentTrackUri = state.track_window.current_track.uri;
+                    const playlistId = 'your-playlist-id-here'; // Replace with your playlist ID
+
+                    fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            uris: [currentTrackUri]
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Track added to playlist:', data);
+                    })
+                    .catch(error => console.error('Error adding track to playlist:', error));
+                }
             });
         });
     };
