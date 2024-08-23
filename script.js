@@ -99,6 +99,20 @@ function initSpotifyPlayer(token) {
             player.previousTrack();
         });
 
+        // Shuffle control
+        document.getElementById('shuffle').addEventListener('click', () => {
+            player.toggleShuffle().then(() => {
+                console.log('Shuffle toggled');
+            });
+        });
+
+        // Repeat control
+        document.getElementById('repeat').addEventListener('click', () => {
+            player.setRepeatMode(2).then(() => {
+                console.log('Repeat mode set to track');
+            });
+        });
+
         // Volume control
         document.getElementById('volume').addEventListener('input', function() {
             const volume = this.value / 100;
@@ -108,6 +122,21 @@ function initSpotifyPlayer(token) {
         });
     };
 }
+
+// Theme toggles
+document.getElementById('toggle-mode').addEventListener('click', () => {
+    document.body.classList.toggle('light-mode');
+    const modeText = document.body.classList.contains('light-mode') ? 'Dark Mode' : 'Light Mode';
+    document.getElementById('toggle-mode').textContent = modeText;
+});
+
+let themeIndex = 0;
+const themes = ['theme-default', 'theme-blue', 'theme-green'];
+document.getElementById('toggle-theme').addEventListener('click', () => {
+    document.body.classList.remove(themes[themeIndex]);
+    themeIndex = (themeIndex + 1) % themes.length;
+    document.body.classList.add(themes[themeIndex]);
+});
 
 function playDefaultPlaylist(device_id, token) {
     const playlistUri = 'spotify:playlist:7uMdU7HvGCIy7IBEk8ZX4U'; // Your fallback playlist URI
