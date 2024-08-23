@@ -1,5 +1,5 @@
 const clientId = 'cdae67bfd8c542f0980cf22d8f30ec55'; // Your Spotify Client ID
-const redirectUri = 'https://a7rium.github.io/spotify'; // Update this with your GitHub Pages URL
+const redirectUri = 'https://a7rium.github.io/spotify/'; // Your GitHub Pages URL
 
 const scopes = [
     'streaming',
