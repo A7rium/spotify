@@ -29,16 +29,9 @@ window.location.hash = '';
 let _token = hash.access_token;
 
 if (!_token) {
-    const authUrl = `${authEndpoint}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes.join(
+    window.location = `${authEndpoint}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes.join(
         '%20'
     )}&response_type=token&show_dialog=true`;
-    const authWindow = window.open(authUrl, 'Spotify Authentication', 'width=600,height=800');
-    const authInterval = setInterval(() => {
-        if (authWindow.closed) {
-            clearInterval(authInterval);
-            window.location.reload(); // Reload the player page once the authentication window is closed
-        }
-    }, 1000);
 } else {
     initSpotifyPlayer(_token);
 }
@@ -64,14 +57,21 @@ function initSpotifyPlayer(token) {
                 const albumArt = state.track_window.current_track.album.images[0]?.url;
 
                 document.getElementById('track-title').textContent = trackName || "Spotify Player by RT8MG";
+                const albumArtElement = document.getElementById('album-art');
                 if (albumArt) {
-                    document.getElementById('album-art').src = albumArt;
+                    albumArtElement.src = albumArt;
                 } else {
-                    document.getElementById('album-art').src = 'https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg'; // Fallback to the Spotify logo
+                    albumArtElement.src = 'https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg'; // Fallback to the Spotify logo
                 }
 
                 const playPauseButton = document.getElementById('play-pause');
                 playPauseButton.innerHTML = state.paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+
+                if (state.paused) {
+                    albumArtElement.classList.remove('playing');
+                } else {
+                    albumArtElement.classList.add('playing');
+                }
             }
         });
 
@@ -79,6 +79,7 @@ function initSpotifyPlayer(token) {
         player.addListener('ready', ({ device_id }) => {
             console.log('Ready with Device ID', device_id);
             playDefaultPlaylist(device_id, token);
+            loadPlaylistCatalog(token); // Load catalog after player is ready
         });
 
         // Not Ready
@@ -123,6 +124,16 @@ function initSpotifyPlayer(token) {
                 console.log(`Volume set to ${volume}`);
             });
         });
+
+        // Catalog menu
+        document.getElementById('catalog-menu').addEventListener('click', () => {
+            document.getElementById('catalog').classList.remove('hidden');
+        });
+
+        // Close catalog
+        document.getElementById('close-catalog').addEventListener('click', () => {
+            document.getElementById('catalog').classList.add('hidden');
+        });
     };
 }
 
@@ -142,6 +153,33 @@ function playDefaultPlaylist(device_id, token) {
         console.log('Default playlist is playing.');
     })
     .catch(error => console.error('Error playing default playlist:', error));
+}
+
+function loadPlaylistCatalog(token) {
+    const playlistId = '7uMdU7HvGCIy7IBEk8ZX4U'; // Your playlist ID
+    fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const catalogList = document.getElementById('catalog-list');
+        catalogList.innerHTML = '';
+        data.items.forEach(item => {
+            const track = item.track;
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <img src="${track.album.images[0].url}" alt="Album Art">
+                <div>
+                    <h4>${track.name}</h4>
+                    <p>${track.artists.map(artist => artist.name).join(', ')}</p>
+                </div>
+            `;
+            catalogList.appendChild(listItem);
+        });
+    })
+    .catch(error => console.error('Error loading playlist catalog:', error));
 }
 
 // AJAX functionality to keep the player playing across page navigations

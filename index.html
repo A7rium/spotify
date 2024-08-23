@@ -21,12 +21,19 @@
             <button id="next"><i class="fas fa-forward"></i></button>
             <button id="shuffle"><i class="fas fa-random"></i></button>
             <button id="repeat"><i class="fas fa-redo"></i></button>
+            <button id="catalog-menu"><i class="fas fa-list"></i></button>
         </div>
         <div id="volume-control">
             <i class="fas fa-volume-down"></i>
             <input type="range" id="volume" min="0" max="100" value="50" class="slider">
         </div>
     </div>
+
+    <div id="catalog" class="hidden">
+        <button id="close-catalog"><i class="fas fa-times"></i></button>
+        <ul id="catalog-list"></ul>
+    </div>
+
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
     <script src="script.js"></script>
 </body>
