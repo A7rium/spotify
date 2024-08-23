@@ -69,10 +69,6 @@ function initSpotifyPlayer(token) {
 
                 const playPauseButton = document.getElementById('play-pause');
                 playPauseButton.innerHTML = state.paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
-
-                // Set the max value of the seek slider to the duration of the track
-                const duration = state.duration / 1000; // Duration in seconds
-                document.getElementById('seek').max = duration;
             }
         });
 
@@ -80,16 +76,6 @@ function initSpotifyPlayer(token) {
         player.addListener('ready', ({ device_id }) => {
             console.log('Ready with Device ID', device_id);
             playDefaultPlaylist(device_id, token);
-
-            // Update the seek slider position every second
-            setInterval(() => {
-                player.getCurrentState().then(state => {
-                    if (state) {
-                        const currentPosition = state.position / 1000; // Position in seconds
-                        document.getElementById('seek').value = currentPosition;
-                    }
-                });
-            }, 1000);
         });
 
         // Not Ready
@@ -118,40 +104,6 @@ function initSpotifyPlayer(token) {
             const volume = this.value / 100;
             player.setVolume(volume).then(() => {
                 console.log(`Volume set to ${volume}`);
-            });
-        });
-
-        // Track seek control
-        document.getElementById('seek').addEventListener('input', function() {
-            const seekPosition = this.value * 1000; // Convert to milliseconds
-            player.seek(seekPosition).then(() => {
-                console.log(`Track seeked to position ${seekPosition}`);
-            });
-        });
-
-        // Save to playlist
-        document.getElementById('save-to-playlist').addEventListener('click', () => {
-            player.getCurrentState().then(state => {
-                if (state) {
-                    const currentTrackUri = state.track_window.current_track.uri;
-                    const playlistId = 'your-playlist-id-here'; // Replace with your playlist ID
-
-                    fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            uris: [currentTrackUri]
-                        }),
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Track added to playlist:', data);
-                    })
-                    .catch(error => console.error('Error adding track to playlist:', error));
-                }
             });
         });
     };
