@@ -103,28 +103,6 @@ function initSpotifyPlayer(token) {
             player.previousTrack();
         });
 
-        // Shuffle control
-        document.getElementById('shuffle').addEventListener('click', () => {
-            player.toggleShuffle().then(() => {
-                console.log('Shuffle toggled');
-            });
-        });
-
-        // Repeat control
-        document.getElementById('repeat').addEventListener('click', () => {
-            player.setRepeatMode(2).then(() => {
-                console.log('Repeat mode set to track');
-            });
-        });
-
-        // Volume control
-        document.getElementById('volume').addEventListener('input', function() {
-            const volume = this.value / 100;
-            player.setVolume(volume).then(() => {
-                console.log(`Volume set to ${volume}`);
-            });
-        });
-
         // Catalog menu
         document.getElementById('catalog-menu').addEventListener('click', () => {
             document.getElementById('catalog').classList.remove('hidden');
