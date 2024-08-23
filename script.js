@@ -69,6 +69,10 @@ function initSpotifyPlayer(token) {
 
                 const playPauseButton = document.getElementById('play-pause');
                 playPauseButton.innerHTML = state.paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+
+                // Set the max value of the seek slider to the duration of the track
+                const duration = state.duration / 1000; // Duration in seconds
+                document.getElementById('seek').max = duration;
             }
         });
 
@@ -77,20 +81,15 @@ function initSpotifyPlayer(token) {
             console.log('Ready with Device ID', device_id);
             playDefaultPlaylist(device_id, token);
 
-            // Handle track seeking
-            player.getCurrentState().then(state => {
-                if (state) {
-                    const duration = state.duration / 1000; // Convert to seconds
-                    document.getElementById('seek').max = duration;
-                }
-            });
-
-            document.getElementById('seek').addEventListener('input', function() {
-                const seekPosition = this.value * 1000; // Convert to milliseconds
-                player.seek(seekPosition).then(() => {
-                    console.log(`Track seeked to position ${seekPosition}`);
+            // Update the seek slider position every second
+            setInterval(() => {
+                player.getCurrentState().then(state => {
+                    if (state) {
+                        const currentPosition = state.position / 1000; // Position in seconds
+                        document.getElementById('seek').value = currentPosition;
+                    }
                 });
-            });
+            }, 1000);
         });
 
         // Not Ready
@@ -119,6 +118,14 @@ function initSpotifyPlayer(token) {
             const volume = this.value / 100;
             player.setVolume(volume).then(() => {
                 console.log(`Volume set to ${volume}`);
+            });
+        });
+
+        // Track seek control
+        document.getElementById('seek').addEventListener('input', function() {
+            const seekPosition = this.value * 1000; // Convert to milliseconds
+            player.seek(seekPosition).then(() => {
+                console.log(`Track seeked to position ${seekPosition}`);
             });
         });
 
