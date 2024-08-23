@@ -10,21 +10,6 @@ const scopes = [
     'playlist-read-collaborative'
 ];
 
-const recordLabels = [
-    'Night Moon Records',
-    'Aurorafields Records',
-    'SonicBass Records',
-    'DWNSMPL Records',
-    'Sanctimony Records',
-    'BeNaam Music',
-    'Spearhawk Records',
-    'Autsome Records',
-    'BundooDoof Records',
-    'Kozmo Records'
-];
-
-const distributors = ['Label Worx', 'Vydia'];
-
 const authEndpoint = 'https://accounts.spotify.com/authorize';
 
 const hash = window.location.hash
@@ -85,7 +70,7 @@ function initSpotifyPlayer(token) {
         // Ready
         player.addListener('ready', ({ device_id }) => {
             console.log('Ready with Device ID', device_id);
-            playFromLabelCatalog(device_id, token);
+            playDefaultPlaylist(device_id, token);
         });
 
         // Not Ready
@@ -116,39 +101,15 @@ function initSpotifyPlayer(token) {
                 console.log(`Volume set to ${volume}`);
             });
         });
-    };
-}
 
-function playFromLabelCatalog(device_id, token) {
-    const query = recordLabels.map(label => `label:"${label}"`).join(' OR ');
-    const distributorQuery = distributors.map(dist => `distributed_by:"${dist}"`).join(' OR ');
-
-    fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)} AND ${encodeURIComponent(distributorQuery)}&type=track&limit=50`, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.tracks.items.length > 0) {
-            const uris = data.tracks.items.map(track => track.uri);
-            fetch(`https://api.spotify.com/v1/me/player/play?device_id=${device_id}`, {
-                method: 'PUT',
-                body: JSON.stringify({ uris }),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+        // Track seek control
+        document.getElementById('seek').addEventListener('input', function() {
+            const seekPosition = this.value;
+            player.seek(seekPosition).then(() => {
+                console.log(`Track seeked to position ${seekPosition}`);
             });
-        } else {
-            console.log('No tracks found for the specified record labels and distributors. Falling back to default playlist.');
-            playDefaultPlaylist(device_id, token);
-        }
-    })
-    .catch(error => {
-        console.error('Error fetching tracks:', error);
-        playDefaultPlaylist(device_id, token); // Fallback in case of an error
-    });
+        });
+    };
 }
 
 function playDefaultPlaylist(device_id, token) {
@@ -164,10 +125,7 @@ function playDefaultPlaylist(device_id, token) {
         },
     })
     .then(() => {
-        console.log('Fallback playlist is playing.');
+        console.log('Default playlist is playing.');
     })
-    .catch(error => console.error('Error playing fallback playlist:', error));
+    .catch(error => console.error('Error playing default playlist:', error));
 }
-git add .
-git commit -m "Updated Spotify player implementation"
-git push origin main
