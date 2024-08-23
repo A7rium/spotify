@@ -9,15 +9,23 @@
 </head>
 <body>
     <div id="player">
-        <h2 id="track-title">Track Title</h2>
-        <p id="artist-name">Artist Name</p>
-        <img id="album-art" src="" alt="Album Art" style="width:100%; height:auto; margin-bottom:10px;">
+        <div id="player-info">
+            <img id="album-art" src="https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg" alt="Spotify Logo" class="logo">
+            <div id="track-info">
+                <h3 id="track-title">Spotify Player & RT8MG</h3>
+                <p id="artist-name">Artist Name</p>
+            </div>
+        </div>
         <div id="controls">
             <button id="prev"><i class="fas fa-backward"></i></button>
             <button id="play-pause"><i class="fas fa-play"></i></button>
             <button id="next"><i class="fas fa-forward"></i></button>
         </div>
-        <input type="range" id="volume" min="0" max="100" value="50">
+        <input type="range" id="seek" min="0" max="100" value="0" class="slider">
+        <div id="volume-control">
+            <i class="fas fa-volume-down"></i>
+            <input type="range" id="volume" min="0" max="100" value="50" class="slider">
+        </div>
     </div>
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
     <script src="script.js"></script>
