@@ -38,12 +38,6 @@ body {
     color: #ffffff;
 }
 
-#track-info p {
-    margin: 5px 0 0;
-    font-size: 0.9rem;
-    color: #b3b3b3;
-}
-
 #controls {
     display: flex;
     align-items: center;
