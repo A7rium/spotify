@@ -1,3 +1,55 @@
+const clientId = 'cdae67bfd8c542f0980cf22d8f30ec55'; // Your Spotify Client ID
+const redirectUri = 'https://a7rium.github.io/spotify/'; // Your GitHub Pages URL
+const scopes = [
+    'streaming',
+    'user-read-email',
+    'user-read-private',
+    'user-modify-playback-state',
+    'user-read-playback-state',
+    'playlist-read-private',
+    'playlist-read-collaborative'
+];
+
+const recordLabels = [
+    'Night Moon Records',
+    'Aurorafields Records',
+    'SonicBass Records',
+    'DWNSMPL Records',
+    'Sanctimony Records',
+    'BeNaam Music',
+    'Spearhawk Records',
+    'Autsome Records',
+    'BundooDoof Records',
+    'Kozmo Records'
+];
+
+const distributors = ['Label Worx', 'Vydia'];
+
+const authEndpoint = 'https://accounts.spotify.com/authorize';
+
+const hash = window.location.hash
+    .substring(1)
+    .split('&')
+    .reduce((initial, item) => {
+        if (item) {
+            const parts = item.split('=');
+            initial[parts[0]] = decodeURIComponent(parts[1]);
+        }
+        return initial;
+    }, {});
+
+window.location.hash = '';
+
+let _token = hash.access_token;
+
+if (!_token) {
+    window.location = `${authEndpoint}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes.join(
+        '%20'
+    )}&response_type=token&show_dialog=true`;
+} else {
+    initSpotifyPlayer(_token);
+}
+
 function initSpotifyPlayer(token) {
     window.onSpotifyWebPlaybackSDKReady = () => {
         const player = new Spotify.Player({
@@ -89,8 +141,33 @@ function playFromLabelCatalog(device_id, token) {
                 },
             });
         } else {
-            console.log('No tracks found for the specified record labels and distributors.');
+            console.log('No tracks found for the specified record labels and distributors. Falling back to default playlist.');
+            playDefaultPlaylist(device_id, token);
         }
     })
-    .catch(error => console.error('Error fetching tracks:', error));
+    .catch(error => {
+        console.error('Error fetching tracks:', error);
+        playDefaultPlaylist(device_id, token); // Fallback in case of an error
+    });
 }
+
+function playDefaultPlaylist(device_id, token) {
+    const playlistUri = 'spotify:playlist:7uMdU7HvGCIy7IBEk8ZX4U'; // Your fallback playlist URI
+    fetch(`https://api.spotify.com/v1/me/player/play?device_id=${device_id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            context_uri: playlistUri
+        }),
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+    })
+    .then(() => {
+        console.log('Fallback playlist is playing.');
+    })
+    .catch(error => console.error('Error playing fallback playlist:', error));
+}
+git add .
+git commit -m "Updated Spotify player implementation"
+git push origin main
