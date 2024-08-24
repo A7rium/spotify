@@ -39,6 +39,8 @@ if (!_token) {
     initSpotifyPlayer(_token);
 }
 
+let visualizer;
+
 function initSpotifyPlayer(token) {
     window.onSpotifyWebPlaybackSDKReady = () => {
         const player = new Spotify.Player({
@@ -47,27 +49,13 @@ function initSpotifyPlayer(token) {
             volume: 0.5
         });
 
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const visualizerCanvas = document.getElementById('visualizer-canvas');
-        const visualizer = butterchurn.createVisualizer(audioContext, visualizerCanvas, {
-            width: window.innerWidth,
-            height: window.innerHeight
-        });
-        const presets = butterchurnPresets.getPresets();
-        const preset = presets['Flexi, martin + geiss - dedicated to the sherwin maxawow'];
-        visualizer.loadPreset(preset, 0.0);
+        // Error handling
+        player.addListener('initialization_error', ({ message }) => { console.error(message); });
+        player.addListener('authentication_error', ({ message }) => { console.error(message); });
+        player.addListener('account_error', ({ message }) => { console.error(message); });
+        player.addListener('playback_error', ({ message }) => { console.error(message); });
 
-        window.addEventListener('resize', () => {
-            visualizer.setRendererSize(window.innerWidth, window.innerHeight);
-        });
-
-        // Connect the player's audio to the visualizer
-        player.addListener('ready', ({ device_id }) => {
-            console.log('Ready with Device ID', device_id);
-            playDefaultPlaylist(device_id, token);
-            loadPlaylistCatalog(token); // Load catalog after player is ready
-        });
-
+        // Playback status updates
         player.addListener('player_state_changed', state => {
             if (state) {
                 const trackName = state.track_window.current_track.name;
@@ -89,11 +77,41 @@ function initSpotifyPlayer(token) {
                 } else {
                     albumArtElement.classList.add('playing');
                 }
+
+                // Start Butterchurn visualizer
+                if (!visualizer) {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const canvas = document.getElementById('visualizer');
+
+                    visualizer = butterchurn.createVisualizer(audioContext, canvas, {
+                        width: canvas.width,
+                        height: canvas.height
+                    });
+
+                    const presets = butterchurnPresets.getPresets();
+                    const preset = presets['Flexi, martin + geiss - dedicated to the sherwin maxawow'];
+                    visualizer.loadPreset(preset, 0.0);
+                }
+                visualizer.render();
             }
         });
 
+        // Ready
+        player.addListener('ready', ({ device_id }) => {
+            console.log('Ready with Device ID', device_id);
+            playDefaultPlaylist(device_id, token);
+            loadPlaylistCatalog(token); // Load catalog after player is ready
+        });
+
+        // Not Ready
+        player.addListener('not_ready', ({ device_id }) => {
+            console.log('Device ID has gone offline', device_id);
+        });
+
+        // Connect the player
         player.connect();
 
+        // Playback controls
         document.getElementById('play-pause').addEventListener('click', () => {
             player.togglePlay();
         });
@@ -106,23 +124,15 @@ function initSpotifyPlayer(token) {
             player.previousTrack();
         });
 
+        // Catalog menu
         document.getElementById('catalog-menu').addEventListener('click', () => {
             document.getElementById('catalog').classList.remove('hidden');
         });
 
+        // Close catalog
         document.getElementById('close-catalog').addEventListener('click', () => {
             document.getElementById('catalog').classList.add('hidden');
         });
-
-        // Visualizer setup and render loop
-        const audioNode = audioContext.createMediaElementSource(document.createElement('audio'));
-        visualizer.connectAudio(audioNode);
-
-        function renderVisualizer() {
-            visualizer.render();
-            requestAnimationFrame(renderVisualizer);
-        }
-        renderVisualizer();
     };
 }
 

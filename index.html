@@ -6,151 +6,11 @@
     <title>Spotify Web Playback SDK</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <style>
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: #1c1c1c;
-            color: white;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            justify-content: flex-end;
-        }
-
-        #visualizer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: calc(100% - 100px); /* Adjust the height to accommodate the player */
-            z-index: 1;
-        }
-
-        #player {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            align-items: center;
-            background-color: #2c2c2c;
-            padding: 10px 20px;
-            border-radius: 15px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-            max-width: 100%;
-            width: 100%;
-            margin-top: auto;
-        }
-
-        #player-info {
-            display: flex;
-            align-items: center;
-            margin-right: 20px;
-        }
-
-        #album-art {
-            width: 60px;
-            height: 60px;
-            margin-right: 15px;
-            border-radius: 50%;
-            transition: transform 0.3s ease;
-        }
-
-        #track-info h3 {
-            margin: 0;
-            font-size: 1.2rem;
-            color: #ffffff;
-        }
-
-        #controls {
-            display: flex;
-            align-items: center;
-            margin-right: 20px;
-        }
-
-        #controls button {
-            background-color: #404040;
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 18px;
-            width: 40px;
-            height: 40px;
-            margin: 0 10px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        #controls button:hover {
-            background-color: #1db954;
-        }
-
-        #volume-control {
-            display: flex;
-            align-items: center;
-            margin-left: auto;
-        }
-
-        #volume-control i {
-            margin-right: 10px;
-        }
-
-        #catalog {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 300px;
-            max-height: 400px;
-            overflow-y: auto;
-            background-color: #2c2c2c;
-            border-radius: 15px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-            padding: 20px;
-            z-index: 1000;
-            display: none;
-        }
-
-        #catalog.hidden {
-            display: none;
-        }
-
-        #catalog ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        #catalog li {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            cursor: pointer;
-        }
-
-        #catalog li img {
-            width: 50px;
-            height: 50px;
-            border-radius: 5px;
-            margin-right: 10px;
-        }
-
-        #catalog li h4 {
-            margin: 0;
-            font-size: 1rem;
-            color: #ffffff;
-        }
-
-        #catalog li p {
-            margin: 5px 0 0;
-            font-size: 0.875rem;
-            color: #aaaaaa;
-        }
-    </style>
 </head>
 <body>
-    <canvas id="visualizer"></canvas>
-
+    <div id="visualizer-container">
+        <canvas id="visualizer"></canvas>
+    </div>
     <div id="player">
         <div id="player-info">
             <img id="album-art" src="https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg" alt="Spotify Logo" class="logo">
@@ -171,49 +31,11 @@
     </div>
 
     <div id="catalog" class="hidden">
+        <button id="close-catalog"><i class="fas fa-times"></i></button>
         <ul id="catalog-list"></ul>
     </div>
 
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
     <script src="script.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/butterchurn@1.6.6/dist/butterchurn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/butterchurn-presets@1.7.0/dist/butterchurn-presets.min.js"></script>
-    <script>
-        // Spotify player code
-        // (Include the previously provided code here)
-
-        // Visualizer initialization
-        const canvas = document.getElementById('visualizer');
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const visualizer = butterchurn.createVisualizer(audioContext, canvas, {
-            width: canvas.width,
-            height: canvas.height
-        });
-
-        const presets = butterchurnPresets.getPresets();
-        const preset = presets['Flexi, martin + geiss - dedicated to the sherwin maxawow'];
-        visualizer.loadPreset(preset, 0.0);
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight - document.getElementById('player').offsetHeight;
-            visualizer.setRendererSize(canvas.width, canvas.height);
-        }
-
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        // Placeholder for audio input connection
-        const audioNode = audioContext.createMediaElementSource(document.querySelector('audio'));
-        visualizer.connectAudio(audioNode);
-
-        // Function to render visualizer frames
-        function renderVisualizer() {
-            visualizer.render();
-            requestAnimationFrame(renderVisualizer);
-        }
-
-        renderVisualizer();
-    </script>
 </body>
 </html>
