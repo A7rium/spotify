@@ -18,15 +18,6 @@
             justify-content: flex-end;
         }
 
-        #visualizer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: calc(100% - 100px); /* Adjust the height to accommodate the player */
-            z-index: 1;
-        }
-
         #player {
             position: relative;
             z-index: 2;
@@ -149,7 +140,6 @@
             color: #aaaaaa;
         }
 
-        /* Add the Press ESC to close hint */
         #catalog::after {
             content: "Press ESC to close";
             position: fixed;
@@ -161,8 +151,6 @@
     </style>
 </head>
 <body>
-    <canvas id="visualizer"></canvas>
-
     <div id="player">
         <div id="player-info">
             <img id="album-art" src="https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg" alt="Spotify Logo" class="logo">
@@ -187,8 +175,6 @@
     </div>
 
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/butterchurn@1.6.6/dist/butterchurn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/butterchurn-presets@1.7.0/dist/butterchurn-presets.min.js"></script>
     <script>
         const clientId = 'cdae67bfd8c542f0980cf22d8f30ec55'; // Your Spotify Client ID
         const redirectUri = 'https://a7rium.github.io/spotify/'; // Your GitHub Pages URL
@@ -304,31 +290,6 @@
                         document.getElementById('catalog').classList.add('hidden');
                     }
                 });
-
-                const canvas = document.getElementById('visualizer');
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const visualizer = butterchurn.createVisualizer(audioContext, canvas, {
-                    width: window.innerWidth,
-                    height: window.innerHeight - document.getElementById('player').offsetHeight
-                });
-
-                const presets = butterchurnPresets.getPresets();
-                const preset = presets['Flexi, martin + geiss - dedicated to the sherwin maxawow'];
-                visualizer.loadPreset(preset, 0.0);
-
-                window.addEventListener('resize', () => {
-                    visualizer.setRendererSize(window.innerWidth, window.innerHeight - document.getElementById('player').offsetHeight);
-                });
-
-                const audioNode = audioContext.createMediaElementSource(new Audio());
-                visualizer.connectAudio(audioNode);
-
-                function renderVisualizer() {
-                    visualizer.render();
-                    requestAnimationFrame(renderVisualizer);
-                }
-
-                renderVisualizer();
             };
         }
 
