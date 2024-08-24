@@ -39,9 +39,19 @@ if (!_token) {
     initSpotifyPlayer(_token);
 }
 
-let visualizer;
-
 function initSpotifyPlayer(token) {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const canvas = document.getElementById('visualizer');
+    const visualizer = butterchurn.createVisualizer(audioContext, canvas, {
+        width: canvas.width,
+        height: canvas.height
+    });
+
+    // Load Butterchurn preset
+    const presets = butterchurnPresets.getPresets();
+    const preset = presets['Flexi, martin + geiss - dedicated to the sherwin maxawow'];
+    visualizer.loadPreset(preset, 0.0);
+
     window.onSpotifyWebPlaybackSDKReady = () => {
         const player = new Spotify.Player({
             name: 'Spotify Player by RT8MG',
@@ -72,27 +82,12 @@ function initSpotifyPlayer(token) {
                 const playPauseButton = document.getElementById('play-pause');
                 playPauseButton.innerHTML = state.paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
 
-                if (state.paused) {
-                    albumArtElement.classList.remove('playing');
-                } else {
-                    albumArtElement.classList.add('playing');
+                if (!state.paused) {
+                    const audioElement = new Audio(state.track_window.current_track.preview_url);
+                    const audioNode = audioContext.createMediaElementSource(audioElement);
+                    visualizer.connectAudio(audioNode);
+                    audioElement.play();
                 }
-
-                // Start Butterchurn visualizer
-                if (!visualizer) {
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const canvas = document.getElementById('visualizer');
-
-                    visualizer = butterchurn.createVisualizer(audioContext, canvas, {
-                        width: canvas.width,
-                        height: canvas.height
-                    });
-
-                    const presets = butterchurnPresets.getPresets();
-                    const preset = presets['Flexi, martin + geiss - dedicated to the sherwin maxawow'];
-                    visualizer.loadPreset(preset, 0.0);
-                }
-                visualizer.render();
             }
         });
 
@@ -175,8 +170,20 @@ function loadPlaylistCatalog(token) {
                     <p>${track.artists.map(artist => artist.name).join(', ')}</p>
                 </div>
             `;
+            listItem.onclick = () => playSpecificTrack(track.uri);
             catalogList.appendChild(listItem);
         });
     })
     .catch(error => console.error('Error loading playlist catalog:', error));
+}
+
+function playSpecificTrack(trackUri) {
+    fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ uris: [trackUri] }),
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${_token}`
+        },
+    }).catch(error => console.error('Error playing specific track:', error));
 }
