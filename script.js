@@ -40,18 +40,6 @@ if (!_token) {
 }
 
 function initSpotifyPlayer(token) {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const canvas = document.getElementById('visualizer');
-    const visualizer = butterchurn.createVisualizer(audioContext, canvas, {
-        width: canvas.width,
-        height: canvas.height
-    });
-
-    // Load Butterchurn preset
-    const presets = butterchurnPresets.getPresets();
-    const preset = presets['Flexi, martin + geiss - dedicated to the sherwin maxawow'];
-    visualizer.loadPreset(preset, 0.0);
-
     window.onSpotifyWebPlaybackSDKReady = () => {
         const player = new Spotify.Player({
             name: 'Spotify Player by RT8MG',
@@ -59,13 +47,27 @@ function initSpotifyPlayer(token) {
             volume: 0.5
         });
 
-        // Error handling
-        player.addListener('initialization_error', ({ message }) => { console.error(message); });
-        player.addListener('authentication_error', ({ message }) => { console.error(message); });
-        player.addListener('account_error', ({ message }) => { console.error(message); });
-        player.addListener('playback_error', ({ message }) => { console.error(message); });
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const visualizerCanvas = document.getElementById('visualizer-canvas');
+        const visualizer = butterchurn.createVisualizer(audioContext, visualizerCanvas, {
+            width: window.innerWidth,
+            height: window.innerHeight
+        });
+        const presets = butterchurnPresets.getPresets();
+        const preset = presets['Flexi, martin + geiss - dedicated to the sherwin maxawow'];
+        visualizer.loadPreset(preset, 0.0);
 
-        // Playback status updates
+        window.addEventListener('resize', () => {
+            visualizer.setRendererSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Connect the player's audio to the visualizer
+        player.addListener('ready', ({ device_id }) => {
+            console.log('Ready with Device ID', device_id);
+            playDefaultPlaylist(device_id, token);
+            loadPlaylistCatalog(token); // Load catalog after player is ready
+        });
+
         player.addListener('player_state_changed', state => {
             if (state) {
                 const trackName = state.track_window.current_track.name;
@@ -82,31 +84,16 @@ function initSpotifyPlayer(token) {
                 const playPauseButton = document.getElementById('play-pause');
                 playPauseButton.innerHTML = state.paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
 
-                if (!state.paused) {
-                    const audioElement = new Audio(state.track_window.current_track.preview_url);
-                    const audioNode = audioContext.createMediaElementSource(audioElement);
-                    visualizer.connectAudio(audioNode);
-                    audioElement.play();
+                if (state.paused) {
+                    albumArtElement.classList.remove('playing');
+                } else {
+                    albumArtElement.classList.add('playing');
                 }
             }
         });
 
-        // Ready
-        player.addListener('ready', ({ device_id }) => {
-            console.log('Ready with Device ID', device_id);
-            playDefaultPlaylist(device_id, token);
-            loadPlaylistCatalog(token); // Load catalog after player is ready
-        });
-
-        // Not Ready
-        player.addListener('not_ready', ({ device_id }) => {
-            console.log('Device ID has gone offline', device_id);
-        });
-
-        // Connect the player
         player.connect();
 
-        // Playback controls
         document.getElementById('play-pause').addEventListener('click', () => {
             player.togglePlay();
         });
@@ -119,15 +106,23 @@ function initSpotifyPlayer(token) {
             player.previousTrack();
         });
 
-        // Catalog menu
         document.getElementById('catalog-menu').addEventListener('click', () => {
             document.getElementById('catalog').classList.remove('hidden');
         });
 
-        // Close catalog
         document.getElementById('close-catalog').addEventListener('click', () => {
             document.getElementById('catalog').classList.add('hidden');
         });
+
+        // Visualizer setup and render loop
+        const audioNode = audioContext.createMediaElementSource(document.createElement('audio'));
+        visualizer.connectAudio(audioNode);
+
+        function renderVisualizer() {
+            visualizer.render();
+            requestAnimationFrame(renderVisualizer);
+        }
+        renderVisualizer();
     };
 }
 
@@ -170,20 +165,8 @@ function loadPlaylistCatalog(token) {
                     <p>${track.artists.map(artist => artist.name).join(', ')}</p>
                 </div>
             `;
-            listItem.onclick = () => playSpecificTrack(track.uri);
             catalogList.appendChild(listItem);
         });
     })
     .catch(error => console.error('Error loading playlist catalog:', error));
-}
-
-function playSpecificTrack(trackUri) {
-    fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ uris: [trackUri] }),
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${_token}`
-        },
-    }).catch(error => console.error('Error playing specific track:', error));
 }
