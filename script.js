@@ -47,27 +47,13 @@ function initSpotifyPlayer(token) {
             volume: 0.5
         });
 
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const visualizerCanvas = document.getElementById('visualizer-canvas');
-        const visualizer = butterchurn.createVisualizer(audioContext, visualizerCanvas, {
-            width: window.innerWidth,
-            height: window.innerHeight
-        });
-        const presets = butterchurnPresets.getPresets();
-        const preset = presets['Flexi, martin + geiss - dedicated to the sherwin maxawow'];
-        visualizer.loadPreset(preset, 0.0);
+        // Error handling
+        player.addListener('initialization_error', ({ message }) => { console.error(message); });
+        player.addListener('authentication_error', ({ message }) => { console.error(message); });
+        player.addListener('account_error', ({ message }) => { console.error(message); });
+        player.addListener('playback_error', ({ message }) => { console.error(message); });
 
-        window.addEventListener('resize', () => {
-            visualizer.setRendererSize(window.innerWidth, window.innerHeight);
-        });
-
-        // Connect the player's audio to the visualizer
-        player.addListener('ready', ({ device_id }) => {
-            console.log('Ready with Device ID', device_id);
-            playDefaultPlaylist(device_id, token);
-            loadPlaylistCatalog(token); // Load catalog after player is ready
-        });
-
+        // Playback status updates
         player.addListener('player_state_changed', state => {
             if (state) {
                 const trackName = state.track_window.current_track.name;
@@ -92,8 +78,22 @@ function initSpotifyPlayer(token) {
             }
         });
 
+        // Ready
+        player.addListener('ready', ({ device_id }) => {
+            console.log('Ready with Device ID', device_id);
+            playDefaultPlaylist(device_id, token);
+            loadPlaylistCatalog(token); // Load catalog after player is ready
+        });
+
+        // Not Ready
+        player.addListener('not_ready', ({ device_id }) => {
+            console.log('Device ID has gone offline', device_id);
+        });
+
+        // Connect the player
         player.connect();
 
+        // Playback controls
         document.getElementById('play-pause').addEventListener('click', () => {
             player.togglePlay();
         });
@@ -106,15 +106,46 @@ function initSpotifyPlayer(token) {
             player.previousTrack();
         });
 
+        // Catalog menu
         document.getElementById('catalog-menu').addEventListener('click', () => {
             document.getElementById('catalog').classList.remove('hidden');
         });
 
-        document.getElementById('close-catalog').addEventListener('click', () => {
-            document.getElementById('catalog').classList.add('hidden');
+        // Close catalog on ESC key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                document.getElementById('catalog').classList.add('hidden');
+            }
         });
 
-        // Visualizer setup and render loop
+        // Close catalog when clicking outside
+        document.getElementById('catalog').addEventListener('click', function(event) {
+            if (event.target === document.getElementById('catalog')) {
+                document.getElementById('catalog').classList.add('hidden');
+            }
+        });
+
+        // Visualizer setup
+        const canvas = document.getElementById('visualizer');
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const visualizer = butterchurn.createVisualizer(audioContext, canvas, {
+            width: canvas.width,
+            height: canvas.height
+        });
+
+        const presets = butterchurnPresets.getPresets();
+        const preset = presets['Flexi, martin + geiss - dedicated to the sherwin maxawow'];
+        visualizer.loadPreset(preset, 0.0);
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight - document.getElementById('player').offsetHeight;
+            visualizer.setRendererSize(canvas.width, canvas.height);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
         const audioNode = audioContext.createMediaElementSource(document.createElement('audio'));
         visualizer.connectAudio(audioNode);
 
@@ -122,6 +153,7 @@ function initSpotifyPlayer(token) {
             visualizer.render();
             requestAnimationFrame(renderVisualizer);
         }
+
         renderVisualizer();
     };
 }
@@ -165,8 +197,20 @@ function loadPlaylistCatalog(token) {
                     <p>${track.artists.map(artist => artist.name).join(', ')}</p>
                 </div>
             `;
+            listItem.onclick = () => playSpecificTrack(track.uri, device_id, token);
             catalogList.appendChild(listItem);
         });
     })
     .catch(error => console.error('Error loading playlist catalog:', error));
+}
+
+function playSpecificTrack(trackUri, device_id, token) {
+    fetch(`https://api.spotify.com/v1/me/player/play?device_id=${device_id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ uris: [trackUri] }),
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+    }).catch(error => console.error('Error playing specific track:', error));
 }
