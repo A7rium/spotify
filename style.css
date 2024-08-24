@@ -2,17 +2,25 @@ body {
     font-family: 'Helvetica Neue', Helvetica;
     background-color: #1c1c1c;
     color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
     margin: 0;
+    overflow: hidden;
+}
+
+#visualizer-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Pushes the visualizer behind the player */
 }
 
 #player {
+    position: relative;
+    z-index: 10;
     display: flex;
     align-items: center;
-    background-color: #2c2c2c;
+    background-color: rgba(44, 44, 44, 0.8); /* Transparent background for the player */
     padding: 10px 20px;
     border-radius: 30px;
     max-width: 100%;
@@ -20,141 +28,4 @@ body {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
-#player-info {
-    display: flex;
-    align-items: center;
-    margin-right: 20px;
-}
-
-#album-art {
-    width: 60px;
-    height: 60px;
-    margin-right: 15px;
-    border-radius: 50%;
-    transition: transform 0.3s ease;
-}
-
-#track-info h3 {
-    margin: 0;
-    font-size: 1.2rem;
-    color: #ffffff;
-}
-
-#controls {
-    display: flex;
-    align-items: center;
-    margin-right: 20px;
-}
-
-#controls button {
-    background-color: #404040;
-    border: none;
-    border-radius: 50%;
-    color: white;
-    font-size: 18px;
-    width: 40px;
-    height: 40px;
-    margin: 0 10px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-#controls button:hover {
-    background-color: #1db954;
-}
-
-.slider {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 5px;
-    background: #535353;
-    outline: none;
-    border-radius: 5px;
-    transition: background 0.2s ease;
-}
-
-#volume-control {
-    display: flex;
-    align-items: center;
-    margin-left: auto;
-    margin-right: 20px;
-}
-
-#volume-control i {
-    margin-right: 10px;
-}
-
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-#album-art.playing {
-    animation: spin 4s linear infinite;
-}
-
-#catalog {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 300px;
-    max-height: 400px;
-    overflow-y: auto;
-    background-color: #2c2c2c;
-    border-radius: 15px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-    padding: 20px;
-    z-index: 1000;
-    display: none;
-}
-
-#catalog.hidden {
-    display: none;
-}
-
-#catalog ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-#catalog li {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-#catalog li img {
-    width: 50px;
-    height: 50px;
-    border-radius: 5px;
-    margin-right: 10px;
-}
-
-#catalog li h4 {
-    margin: 0;
-    font-size: 1rem;
-    color: #ffffff;
-}
-
-#catalog li p {
-    margin: 5px 0 0;
-    font-size: 0.875rem;
-    color: #aaaaaa;
-}
-
-#close-catalog {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: transparent;
-    border: none;
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-}
+/* Other existing styles */

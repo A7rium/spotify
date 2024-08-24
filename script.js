@@ -1,3 +1,6 @@
+import butterchurn from 'butterchurn';
+import butterchurnPresets from 'butterchurn-presets';
+
 const clientId = 'cdae67bfd8c542f0980cf22d8f30ec55'; // Your Spotify Client ID
 const redirectUri = 'https://a7rium.github.io/spotify/'; // Your GitHub Pages URL
 const scopes = [
@@ -44,13 +47,27 @@ function initSpotifyPlayer(token) {
             volume: 0.5
         });
 
-        // Error handling
-        player.addListener('initialization_error', ({ message }) => { console.error(message); });
-        player.addListener('authentication_error', ({ message }) => { console.error(message); });
-        player.addListener('account_error', ({ message }) => { console.error(message); });
-        player.addListener('playback_error', ({ message }) => { console.error(message); });
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const visualizerCanvas = document.getElementById('visualizer-canvas');
+        const visualizer = butterchurn.createVisualizer(audioContext, visualizerCanvas, {
+            width: window.innerWidth,
+            height: window.innerHeight
+        });
+        const presets = butterchurnPresets.getPresets();
+        const preset = presets['Flexi, martin + geiss - dedicated to the sherwin maxawow'];
+        visualizer.loadPreset(preset, 0.0);
 
-        // Playback status updates
+        window.addEventListener('resize', () => {
+            visualizer.setRendererSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Connect the player's audio to the visualizer
+        player.addListener('ready', ({ device_id }) => {
+            console.log('Ready with Device ID', device_id);
+            playDefaultPlaylist(device_id, token);
+            loadPlaylistCatalog(token); // Load catalog after player is ready
+        });
+
         player.addListener('player_state_changed', state => {
             if (state) {
                 const trackName = state.track_window.current_track.name;
@@ -75,22 +92,8 @@ function initSpotifyPlayer(token) {
             }
         });
 
-        // Ready
-        player.addListener('ready', ({ device_id }) => {
-            console.log('Ready with Device ID', device_id);
-            playDefaultPlaylist(device_id, token);
-            loadPlaylistCatalog(token); // Load catalog after player is ready
-        });
-
-        // Not Ready
-        player.addListener('not_ready', ({ device_id }) => {
-            console.log('Device ID has gone offline', device_id);
-        });
-
-        // Connect the player
         player.connect();
 
-        // Playback controls
         document.getElementById('play-pause').addEventListener('click', () => {
             player.togglePlay();
         });
@@ -103,15 +106,23 @@ function initSpotifyPlayer(token) {
             player.previousTrack();
         });
 
-        // Catalog menu
         document.getElementById('catalog-menu').addEventListener('click', () => {
             document.getElementById('catalog').classList.remove('hidden');
         });
 
-        // Close catalog
         document.getElementById('close-catalog').addEventListener('click', () => {
             document.getElementById('catalog').classList.add('hidden');
         });
+
+        // Visualizer setup and render loop
+        const audioNode = audioContext.createMediaElementSource(document.createElement('audio'));
+        visualizer.connectAudio(audioNode);
+
+        function renderVisualizer() {
+            visualizer.render();
+            requestAnimationFrame(renderVisualizer);
+        }
+        renderVisualizer();
     };
 }
 
@@ -159,27 +170,3 @@ function loadPlaylistCatalog(token) {
     })
     .catch(error => console.error('Error loading playlist catalog:', error));
 }
-
-// AJAX functionality to keep the player playing across page navigations
-$(document).ready(function() {
-    $("a").on("click", function(e) {
-        e.preventDefault();
-        var url = $(this).attr("href");
-        $.ajax({
-            url: url,
-            success: function(data) {
-                $("#content").html($(data).find("#content").html());
-                history.pushState(null, null, url);
-            }
-        });
-    });
-
-    window.onpopstate = function() {
-        $.ajax({
-            url: location.pathname,
-            success: function(data) {
-                $("#content").html($(data).find("#content").html());
-            }
-        });
-    };
-});
